@@ -19,7 +19,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
-
+import android.content.Intent
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.FileOutputStream
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,8 +79,43 @@ fun CameraScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = { }) {
+        val context = LocalContext.current
+
+        Button(
+            onClick = {
+                capturedImage?.let {
+                    sharePhoto(context, it)
+                }
+            },
+            enabled = capturedImage != null
+        ) {
             Text("Share Photo")
         }
     }
+}
+fun sharePhoto(context: Context, bitmap: Bitmap) {
+
+    val file = File(context.cacheDir, "captured_photo.jpg")
+
+    val outputStream = FileOutputStream(file)
+
+    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+
+    outputStream.close()
+
+    val uri = FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.provider",
+        file
+    )
+
+    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+        type = "image/jpeg"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+
+    context.startActivity(
+        Intent.createChooser(shareIntent, "Share Photo")
+    )
 }
