@@ -11,6 +11,14 @@ import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.graphics.Bitmap
+import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
 
 class MainActivity : ComponentActivity() {
 
@@ -27,6 +35,15 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun CameraScreen() {
+    var capturedImage by remember {
+        mutableStateOf<Bitmap?>(null)
+    }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) {
+        bitmap ->
+        capturedImage = bitmap
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -38,10 +55,20 @@ fun CameraScreen() {
             text = "Simple Camera",
             style = MaterialTheme.typography.headlineMedium
         )
+        if (capturedImage != null) {
+            Image(
+                bitmap = capturedImage!!.asImageBitmap(),
+                contentDescription = "Captured Photo",
+                modifier = Modifier
+                    .size(250.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.height(30.dp))
 
-        Button(onClick = { }) {
+        Button(onClick = {
+            cameraLauncher.launch(null)
+        }) {
             Text("Capture Photo")
         }
 
